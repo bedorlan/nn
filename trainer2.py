@@ -82,7 +82,7 @@ y = scalarY.transform(y)
 print X, y
 # define and fit the final model
 
-MODEL_FILE = 'trainer2.model'
+MODEL_FILE = 'models/out.model'
 
 def getModel():
     if os.path.isfile(MODEL_FILE):
@@ -93,8 +93,9 @@ def getModel():
 def createModel():
     model = Sequential()
     model.add(Dense(1000, input_dim=1, activation='relu'))
+    model.add(Dropout(0.2))
     model.add(Dense(100, activation='relu'))
-    # model.add(Dropout(0.2))
+    model.add(Dropout(0.2))
     model.add(Dense(1, activation='linear'))
     model.compile(loss='mse', optimizer='adam')
     model.summary()

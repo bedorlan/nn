@@ -77,7 +77,8 @@ X = scalarX.transform(X.reshape(-1, 1))
 y = scalarY.transform(y)
 # print X, y
 # define and fit the final model
-model = keras.models.load_model('trainer2.model')
+MODEL_FILE = 'models/out.model'
+model = keras.models.load_model(MODEL_FILE)
 model.summary()
 
 # new instance where we do not know the answer
