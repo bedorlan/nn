@@ -1,0 +1,46 @@
+<html>
+
+<head>
+    <script src="https://unpkg.com/react@16/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/reactstrap@6/dist/reactstrap.full.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/bootstrap@4/dist/css/bootstrap.min.css">
+
+    <script type="text/babel">
+class MyComponent extends React.Component {
+    constructor(props) {
+        super(props)
+        this.state = {i: 0}
+    }
+
+    componentWillMount() {
+        setInterval(() => {
+            this.setState({i: this.state.i + 1})
+        }, 1000) 
+    }
+
+    render() {
+        return <div>
+        <Reactstrap.Button>Hello</Reactstrap.Button>
+        <Counter count={this.state.i} />
+        </div>
+    }
+}
+
+function Counter(props) {
+    return <div>count={props.count}</div>
+}
+
+ReactDOM.render(
+    <MyComponent />,
+    document.getElementById('root')
+)
+</script>
+</head>
+
+<body>
+    <div id="root"></div>
+</body>
+
+</html>
