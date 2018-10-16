@@ -1,0 +1,17 @@
+version: '2'
+services:
+  broker:
+    image: rabbitmq:3-management
+    ports:
+      - 15672:15672
+
+  trainer:
+    depends_on:
+      - broker
+    build: ./trainer
+    links: 
+      - broker
+    volumes:
+      - ./trainer:/work
+    working_dir: /work
+    command: python app.py
