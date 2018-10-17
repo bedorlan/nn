@@ -8,6 +8,8 @@
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/bootstrap@4/dist/css/bootstrap.min.css">
 
     <script type="text/babel">
+const { Input, Label } = Reactstrap
+
 class MyComponent extends React.Component {
     constructor(props) {
         super(props)
@@ -15,21 +17,14 @@ class MyComponent extends React.Component {
     }
 
     componentWillMount() {
-        setInterval(() => {
-            this.setState({i: this.state.i + 1})
-        }, 1000) 
     }
 
     render() {
-        return <div>
-        <Reactstrap.Button>Hello</Reactstrap.Button>
-        <Counter count={this.state.i} />
-        </div>
+        return <>
+            <Label for="trainData">Train data</Label>
+            <Input type="textarea" id="trainData" />
+        </>
     }
-}
-
-function Counter(props) {
-    return <div>count={props.count}</div>
 }
 
 ReactDOM.render(
