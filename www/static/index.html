@@ -8,12 +8,12 @@
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/bootstrap@4/dist/css/bootstrap.min.css">
 
     <script type="text/babel">
-const { Input, Label } = Reactstrap
+const { Input, Label, Button } = Reactstrap
 
 class MyComponent extends React.Component {
     constructor(props) {
         super(props)
-        this.state = {i: 0}
+        this.onSubmit = this.onSubmit.bind(this)
     }
 
     componentWillMount() {
@@ -22,8 +22,18 @@ class MyComponent extends React.Component {
     render() {
         return <>
             <Label for="trainData">Train data</Label>
-            <Input type="textarea" id="trainData" />
+            <Input type="textarea" id="trainData" rows={10} onChange={e => this.setState({trainData: e.target.value})} />
+            <Button onClick={this.onSubmit}>Submit</Button>
         </>
+    }
+
+    async onSubmit() {
+        const trainData = this.state.trainData.split('\n').map(line => line.split(',').map(Number))
+        const body = JSON.stringify({trainData})
+        const headers = {'Content-type': 'application/json'}
+        const result = await fetch('/cgi/train', {method: 'POST', headers, body})
+        const response = await result.json()
+        console.log(response)
     }
 }
 
