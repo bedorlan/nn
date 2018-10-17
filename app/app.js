@@ -23,15 +23,15 @@ async function main() {
   }
   const ch = await conn.createChannel()
   const app = express()
+  const emitter = new EventEmitter()
 
   const qModels = await ch.assertQueue('', { exclusive: true })
-  const qModelsEv = new EventEmitter()
-  ch.consume(qModels.queue, msg => qModelsEv.emit(qModels.queue, msg))
+  ch.consume(qModels.queue, msg => emitter.emit(qModels.queue, msg))
   app.get('/cgi/models', async (req, res) => {
     try {
       ch.sendToQueue('get_models', Buffer.from(''), { replyTo: qModels.queue })
       // FIXME: correlation id!
-      qModelsEv.once(qModels.queue, msg =>
+      emitter.once(qModels.queue, msg =>
         res
           .header('Content-type', 'application/json')
           .status(200)
@@ -45,16 +45,18 @@ async function main() {
 
   app.use(bodyParser.json())
 
-  app.post('/train', (req, res) => {
+  const qTrain = await ch.assertQueue('training')
+  app.post('/cgi/train', (req, res) => {
     const { body } = req
-    if (!(body.modelName && body.windowSize && body.data)) {
+    if (!body.trainData) {
       console.error(400, body)
       res.sendStatus(400)
       return
     }
 
-    // TODO
-    res.sendStatus(200)
+    const content = JSON.stringify(body)
+    await ch.sendToQueue(qTrain.queue, Buffer.from(content))
+    res.status(200).send('{}')
   })
 
   app.listen(port, () => console.log(`Example app listening on port ${port}!`))
