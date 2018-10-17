@@ -6,7 +6,7 @@ services:
       - 15672:15672
   trainer:
     build: ./trainer
-    links: 
+    links:
       - broker
     volumes:
       - ./trainer:/work
@@ -14,8 +14,6 @@ services:
     command: python app.py
   app:
     build: ./app
-    ports:
-      - 3000:3000
     links:
       - broker
     volumes:
@@ -23,3 +21,13 @@ services:
     working_dir: /work
     restart: always
     command: node app.js
+  www:
+    image: nginx
+    ports:
+      - 80:80
+    links:
+      - app
+    volumes:
+      - ./www:/work
+      - ./www/nginx.conf:/etc/nginx/nginx.conf
+      - ./www/htpasswd:/etc/nginx/htpasswd

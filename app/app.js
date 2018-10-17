@@ -27,7 +27,7 @@ async function main() {
   const qModels = await ch.assertQueue('', { exclusive: true })
   const qModelsEv = new EventEmitter()
   ch.consume(qModels.queue, msg => qModelsEv.emit(qModels.queue, msg))
-  app.get('/models', async (req, res) => {
+  app.get('/cgi/models', async (req, res) => {
     try {
       ch.sendToQueue('get_models', Buffer.from(''), { replyTo: qModels.queue })
       // FIXME: correlation id!
