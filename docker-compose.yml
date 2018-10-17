@@ -4,10 +4,7 @@ services:
     image: rabbitmq:3-management
     ports:
       - 15672:15672
-
   trainer:
-    depends_on:
-      - broker
     build: ./trainer
     links: 
       - broker
@@ -15,3 +12,14 @@ services:
       - ./trainer:/work
     working_dir: /work
     command: python app.py
+  app:
+    build: ./app
+    ports:
+      - 3000:3000
+    links:
+      - broker
+    volumes:
+      - ./app:/work
+    working_dir: /work
+    restart: always
+    command: node app.js
