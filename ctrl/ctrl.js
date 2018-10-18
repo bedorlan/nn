@@ -7,30 +7,32 @@ const publisher = zmq.socket('pub')
 
 replier.on('message', msg => {
   msg = JSON.parse(msg.toString())
-  let content = { ...msg }
+  let response = { ...msg }
   switch (msg.event) {
     case 'get_state':
-      content = { ...content, response: store.getState() }
+      response = { ...response, response: store.getState() }
       break
 
     case 'train': {
       const payload = { trainData: msg.trainData }
       const action = { type: 'TRAIN', payload }
       store.dispatch(action)
-      content = { event: content.event }
+      response = { event: response.event }
       break
     }
 
     case 'train_result': {
-      console.log('new train_result', content)
+      const payload = { trainResult: msg.content }
+      const action = { type: 'TRAIN_RESULT', payload }
+      store.dispatch(action)
       break
     }
 
     default:
-      content = { ...content, error: 'nn: unknown event' }
+      response = { ...response, error: 'nn: unknown event' }
   }
 
-  replier.send(JSON.stringify(content))
+  replier.send(JSON.stringify(response))
 })
 
 store.subscribe(() => {
@@ -56,6 +58,12 @@ function reducer(prevState, action) {
       return {
         ...prevState,
         train: action.payload.trainData,
+      }
+
+    case 'TRAIN_RESULT':
+      return {
+        ...prevState,
+        trainResult: action.payload.trainResult,
       }
 
     default:

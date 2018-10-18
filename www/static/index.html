@@ -7,19 +7,29 @@
     <script src="https://unpkg.com/reactstrap@6/dist/reactstrap.full.min.js"></script>
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/bootstrap@4/dist/css/bootstrap.min.css">
 
+    <script src="https://unpkg.com/chart.js@2.7.2/dist/Chart.bundle.js"></script>
+    <script src="https://unpkg.com/react-chartkick@0.3.0"></script>
+
     <script type="text/babel">
 const { Input, Label, Button } = Reactstrap
+const { LineChart } = ReactChartkick
 
 class MyComponent extends React.Component {
     constructor(props) {
         super(props)
         this.onSubmit = this.onSubmit.bind(this)
+        this.state = {}
     }
 
     componentWillMount() {
         const watchEvent = new EventSource('/cgi/watch');
         watchEvent.addEventListener('message', (e) => {
-            console.log('new event!', e)
+            const data = JSON.parse(e.data)
+            const trainResult = [
+                data.trainResult[0].map((x, i) => [i, x]),
+                data.trainResult[1].map((x, i) => [i, x]),
+            ]
+            this.setState({trainResult})
         })
     }
 
@@ -28,6 +38,9 @@ class MyComponent extends React.Component {
             <Label for="trainData">Train data</Label>
             <Input type="textarea" id="trainData" rows={10} onChange={e => this.setState({trainData: e.target.value})} />
             <Button onClick={this.onSubmit}>Submit</Button>
+            {this.state.trainResult &&
+                <LineChart legend={false} data={[{data: this.state.trainResult[0]}, {data: this.state.trainResult[1]}]}  />
+            }
         </>
     }
 
