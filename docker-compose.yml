@@ -21,7 +21,6 @@ services:
   app:
     build: ./app
     links:
-      - broker
       - ctrl
     volumes:
       - ./app:/work
