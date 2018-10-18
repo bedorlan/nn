@@ -1,2 +1,4 @@
+*.pyc
 logs/
 node_modules/
+.vscode/.ropeproject/
