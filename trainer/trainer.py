@@ -1,142 +1,67 @@
+import os
+import threading
 import keras
 import numpy
-import sqlite3
-import datetime
-import time
-import tensorflowjs
+from sklearn.preprocessing import MinMaxScaler
+
+# reshape(samples, time_steps, features)
+
+window_size = 6
+features = 2
+
+MODEL_FILE = 'models/out.model'
 
 
-raw_data = [
-    7847,
-    6528,
-    6441,
-    5372,
-    4200,
-    3431,
-    1868,
-    5676,
-    5442,
-    8044,
-    9938,
-    10067,
-    9655,
-    7790,
-    8155,
-    7782,
-    4576,
-    6465,
-    3092,
-    6375,
-    6308,
-    9266,
-    10320,
-    11297,
-    11053,
-    9199,
-    11256,
-    7258,
-    4484,
-    6493,
-    3784,
-    8938,
-    10207,
-    11594,
-    10957,
-    12183,
-    14452,
-    7790,
-    10163,
-    8162,
-    5493,
-    7141,
-    2128,
-    9041,
-    7880,
-    11275,
-    11732,
-    14142,
-    12633,
-    10411,
-    9245,
-    7975,
-    4134,
-    7046,
-    3537,
-    8549,
-    10477,
-    10629,
-    10477,
-    10629
-]
-raw_data = [x / 100000.0 for x in raw_data]
-count = len(raw_data)
+class Trainer(threading.Thread):
 
-data = numpy.array(raw_data).reshape((10, 6, 1))
-x = data[:,:-1]
-y = data[:,-1]
+    def init(self, trainData):
+        self.trainData = trainData
+        self.stopEvent = threading.Event()
 
-print x
-print y
+    def run(self):
+        data = self.getData()
+        data_windows = create_windows(data, window_size)
+        data_windows = numpy.array(
+            data_windows).reshape(-1, window_size, features)
+        model = getModel()
+        X = data_windows[:, :-1]
+        y = data_windows[:, -1, 1]
+        #board = keras.callbacks.TensorBoard(log_dir='./logs')
+        while not self.stopEvent.is_set():
+            history = model.fit(X, y, epochs=1000, verbose=0)
+            model.save(MODEL_FILE)
+            print 'loss=', history
+            # print 'loss=', history.history['loss'][-1]
 
-model = keras.models.Sequential()
-# stateful=True means that the states computed for the samples in one batch will be reused as initial states for the samples in the next batch.
-model.add(keras.layers.LSTM(32, input_shape=(len(x[0]), 1), dropout=0.2))
-# model.add(keras.layers.LSTM(10)) # dont forget return_sequences=True in the previous layer
-model.add(keras.layers.Dense(1, activation='linear'))
-model.compile(loss='mse', optimizer='adam')
-model.summary()
-model.fit(x, y, epochs=10000, verbose=1)
+    def stop(self):
+        self.stopEvent.set()
 
-#tensorflowjs.converters.save_keras_model(model, 'models/')
-model.save('models/model.data')
+    def getData(self):
+        y = numpy.array(self.trainData)
+        scalarY = MinMaxScaler(feature_range=(-1, 1))
+        scalarY.fit(y)
+        y = scalarY.transform(y)
+        return y, scalarY
 
-#test_data = [13, 14, 15, 16, 17, 18, 19, 20, 21]
-#test_data = test_data[:-1]
 
-#yhat = model.predict(numpy.array(test_data).reshape(1, 9, 1))
-# print(yhat)
+def createModel():
+    model = keras.Sequential()
+    model.add(keras.layers.LSTM(100, input_shape=(
+        window_size-1, features), return_sequences=True))
+    model.add(keras.layers.Flatten())
+    model.add(keras.layers.Dropout(0.2))
+    model.add(keras.layers.Dense(1, activation='linear'))
+    model.compile(loss='mse', optimizer='adam')
+    model.summary()
+    return model
 
-'''
-reshape(samples, time_steps, features)
->>> np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]).reshape((2, 3, 2))
-array([[[ 1,  2],
-        [ 3,  4],
-        [ 5,  6]],
 
-       [[ 7,  8],
-        [ 9, 10],
-        [11, 12]]])
->>> a = np.array([[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12]]).reshape((3, 4, 1))
->>> a
-array([[[ 1],
-        [ 2],
-        [ 3],
-        [ 4]],
+def create_windows(y, window_size):
+    return [y[i:][:window_size] for i, _ in enumerate(y)][:-window_size+1]
 
-       [[ 5],
-        [ 6],
-        [ 7],
-        [ 8]],
 
-       [[ 9],
-        [10],
-        [11],
-        [12]]])
->>> a[:,:-1]
-array([[[ 1],
-        [ 2],
-        [ 3]],
+def getModel():
+    if os.path.isfile(MODEL_FILE):
+        return keras.models.load_model(MODEL_FILE)
 
-       [[ 5],
-        [ 6],
-        [ 7]],
-
-       [[ 9],
-        [10],
-        [11]]])
->>> a[:,-1]
-array([[ 4],
-       [ 8],
-       [12]])
->>>
-'''
+    return createModel()

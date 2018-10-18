@@ -2,4 +2,4 @@ keras
 sklearn
 tensorflow
 matplotlib
-pika
+pyzmq
