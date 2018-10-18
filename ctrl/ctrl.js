@@ -21,6 +21,9 @@ replier.on('message', msg => {
       return replier.send(JSON.stringify(content))
     }
 
+    case 'train_result': {
+      return console.log('new train_result', content)
+    }
     default:
       content = { ...content, error: 'nn: unknown event' }
       return replier.send(JSON.stringify(content))

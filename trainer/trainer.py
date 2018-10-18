@@ -1,8 +1,10 @@
 import os
 import threading
+# import pymitter
 import keras
 import numpy
 from sklearn.preprocessing import MinMaxScaler
+import logging
 
 # reshape(samples, time_steps, features)
 
@@ -17,8 +19,10 @@ class Trainer(threading.Thread):
     def init(self, trainData):
         self.trainData = trainData
         self.stopEvent = threading.Event()
+        # self.on_epoch_end = pymitter.EventEmitter()
 
     def run(self):
+        logging.info('running thread')
         data = self.getData()
         data_windows = create_windows(data, window_size)
         data_windows = numpy.array(
@@ -31,6 +35,7 @@ class Trainer(threading.Thread):
             history = model.fit(X, y, epochs=1000, verbose=0)
             model.save(MODEL_FILE)
             print 'loss=', history
+            # self.on_epoch_end.emit('train_result', [4, 5])
             # print 'loss=', history.history['loss'][-1]
 
     def stop(self):
