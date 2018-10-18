@@ -35,7 +35,7 @@ class Trainer(threading.Thread):
         #board = keras.callbacks.TensorBoard(log_dir='./logs')
         while not self.stopEvent.is_set():
             history = model.fit(X, y, epochs=1000, verbose=0)
-            model.save(MODEL_FILE)
+            # model.save(MODEL_FILE)
             datanew = tester.predict(model, data, scalarY)
             result = [data[:, 1].tolist(), datanew[:, 1].tolist()]
             self.on_epoch_end.emit('train_result', result)
