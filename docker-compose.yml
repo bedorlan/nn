@@ -4,12 +4,14 @@ services:
     image: rabbitmq:3-management
     ports:
       - 15672:15672
+
   ctrl:
     build: ./ctrl
     volumes:
       - ./ctrl:/work
     working_dir: /work
     command: node ctrl.js
+
   trainer:
     build: ./trainer
     links:
@@ -18,15 +20,18 @@ services:
       - ./trainer:/work
     working_dir: /work
     command: python app.py
+
   app:
     build: ./app
     links:
+      - broker
       - ctrl
     volumes:
       - ./app:/work
     working_dir: /work
     restart: always
     command: node app.js
+
   www:
     image: nginx
     ports:
