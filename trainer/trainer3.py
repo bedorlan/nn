@@ -9,8 +9,12 @@ from keras.layers import TimeDistributed
 from keras.layers import Dropout
 from data3 import getData
 
+# reshape(samples, time_steps, features)
+
+
 def create_windows(y, window_size):
-    return [y[i:][:window_size] for i,_ in enumerate(y)][:-window_size+1]
+    return [y[i:][:window_size] for i, _ in enumerate(y)][:-window_size+1]
+
 
 window_size = 6
 features = 2
@@ -21,15 +25,18 @@ print data_windows
 
 MODEL_FILE = 'models/out.model'
 
+
 def getModel():
     if os.path.isfile(MODEL_FILE):
         return keras.models.load_model(MODEL_FILE)
 
     return createModel()
 
+
 def createModel():
     model = Sequential()
-    model.add(LSTM(100, input_shape=(window_size-1, features), return_sequences=True))
+    model.add(LSTM(100, input_shape=(
+        window_size-1, features), return_sequences=True))
     model.add(Flatten())
     model.add(Dropout(0.2))
     model.add(Dense(1, activation='linear'))
@@ -37,9 +44,10 @@ def createModel():
     model.summary()
     return model
 
+
 model = getModel()
-X = data_windows[:,:-1]
-y = data_windows[:,-1,1]
+X = data_windows[:, :-1]
+y = data_windows[:, -1, 1]
 #board = keras.callbacks.TensorBoard(log_dir='./logs')
 while True:
     history = model.fit(X, y, epochs=1000, verbose=0)
