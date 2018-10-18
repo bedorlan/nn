@@ -4,7 +4,6 @@ import threading
 import logging
 import json
 import trainer
-import app as my
 
 logging.basicConfig(level=logging.INFO)
 
