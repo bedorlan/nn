@@ -3,7 +3,7 @@ const zmq = require('zeromq')
 
 const store = createStore(reducer)
 const replier = zmq.socket('rep')
-const publisher = zmq.socket('sub')
+const publisher = zmq.socket('pub')
 
 replier.on('message', msg => {
   msg = JSON.parse(msg.toString())
@@ -13,24 +13,46 @@ replier.on('message', msg => {
       content = { ...content, response: store.getState() }
       return replier.send(JSON.stringify(content))
 
+    case 'train': {
+      const payload = { trainData: msg.trainData }
+      const action = { type: 'TRAIN', payload }
+      store.dispatch(action)
+      content = { event: content.event }
+      return replier.send(JSON.stringify(content))
+    }
+
     default:
       content = { ...content, error: 'nn: unknown event' }
       return replier.send(JSON.stringify(content))
   }
 })
 
-store.subscribe(state => {
-  publisher.send()
+store.subscribe(() => {
+  const state = store.getState()
+  console.log('new_state', state)
+  publisher.send(JSON.stringify(state))
 })
 
 replier.bind('tcp://*:3001', err => err && console.error(err))
 publisher.bind('tcp://*:3002', err => err && console.error(err))
 
 function reducer(prevState, action) {
+  console.log('reducer', prevState, action)
+
   if (prevState == null) {
     return {
       models: ['a', 'b'],
     }
   }
-  return prevState
+
+  switch (action.type) {
+    case 'TRAIN':
+      return {
+        ...prevState,
+        train: action.payload.trainData,
+      }
+
+    default:
+      return prevState
+  }
 }

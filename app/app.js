@@ -14,6 +14,32 @@ async function main() {
   const app = express()
   const emitter = new EventEmitter()
 
+  const newStateEvent = 'new_state'
+  const subscriber = zmq.socket('sub')
+  subscriber.connect('tcp://ctrl:3002')
+  subscriber.subscribe('')
+  subscriber.on('message', msg => {
+    msg = msg.toString()
+    console.log('new subscriber message', msg)
+    emitter.emit(newStateEvent, msg)
+  })
+  app.get('/cgi/watch', async (req, res) => {
+    try {
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+      })
+
+      const notifyFn = msg => res.write(`data: ${msg}\n\n`)
+      emitter.on(newStateEvent, notifyFn)
+      req.on('close', () => emitter.removeListener(newStateEvent, notifyFn))
+    } catch (err) {
+      console.error(err)
+      res.sendStatus(500)
+    }
+  })
+
   const client = zmq.socket('req')
   client.connect('tcp://ctrl:3001')
   client.on('message', msg => {
@@ -26,7 +52,6 @@ async function main() {
       const event = 'get_state'
       const content = { event }
       client.send(JSON.stringify(content))
-      // FIXME: correlation id!
       emitter.once(event, response =>
         res
           .header('Content-type', 'application/json')
@@ -42,16 +67,24 @@ async function main() {
   app.use(bodyParser.json())
 
   app.post('/cgi/train', (req, res) => {
-    const { body } = req
-    if (!body.trainData) {
-      console.error(400, body)
-      res.sendStatus(400)
-      return
-    }
+    try {
+      const { body } = req
+      console.log('/cgi/train', body)
+      if (!body.trainData) {
+        console.error(400, body)
+        return res.sendStatus(400)
+      }
 
-    const content = JSON.stringify(body)
-    // TODO
-    res.status(200).send('{}')
+      const event = 'train'
+      const { trainData } = body
+      const content = { event, trainData }
+      client.send(JSON.stringify(content))
+
+      emitter.once(event, () => res.sendStatus(202))
+    } catch (err) {
+      console.error(err)
+      res.sendStatus(500)
+    }
   })
 
   app.listen(port, () => console.log(`Example app listening on port ${port}!`))

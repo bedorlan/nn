@@ -17,6 +17,10 @@ class MyComponent extends React.Component {
     }
 
     componentWillMount() {
+        const watchEvent = new EventSource('/cgi/watch');
+        watchEvent.addEventListener('message', (e) => {
+            console.log('new event!', e)
+        })
     }
 
     render() {
@@ -31,9 +35,7 @@ class MyComponent extends React.Component {
         const trainData = this.state.trainData.split('\n').map(line => line.split(',').map(Number))
         const body = JSON.stringify({trainData})
         const headers = {'Content-type': 'application/json'}
-        const result = await fetch('/cgi/train', {method: 'POST', headers, body})
-        const response = await result.json()
-        console.log(response)
+        await fetch('/cgi/train', {method: 'POST', headers, body})
     }
 }
 
