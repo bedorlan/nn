@@ -3,7 +3,7 @@ const { EventEmitter } = require('events')
 const { promisify } = require('util')
 const express = require('express')
 const bodyParser = require('body-parser')
-const amqp = require('amqplib')
+const zmq = require('zeromq')
 
 fs.readdir = promisify(fs.readdir).bind(fs)
 setTimeout = promisify(setTimeout)
@@ -11,27 +11,20 @@ setTimeout = promisify(setTimeout)
 const port = 3000
 
 async function main() {
-  let conn
-  while (true) {
-    try {
-      await setTimeout(10 * 1000)
-      conn = await amqp.connect('amqp://broker')
-      break
-    } catch (err) {
-      console.error(err)
-    }
-  }
-  const ch = await conn.createChannel()
   const app = express()
   const emitter = new EventEmitter()
 
-  const qModels = await ch.assertQueue('', { exclusive: true })
-  ch.consume(qModels.queue, msg => emitter.emit(qModels.queue, msg))
+  const client = zmq.socket('req')
+  client.connect('tcp://ctrl:3001')
+  client.on('message', msg => {
+    emitter.emit('get_models', { content: msg })
+  })
+
   app.get('/cgi/models', async (req, res) => {
     try {
-      ch.sendToQueue('get_models', Buffer.from(''), { replyTo: qModels.queue })
+      client.send('')
       // FIXME: correlation id!
-      emitter.once(qModels.queue, msg =>
+      emitter.once('get_models', msg =>
         res
           .header('Content-type', 'application/json')
           .status(200)
@@ -45,7 +38,6 @@ async function main() {
 
   app.use(bodyParser.json())
 
-  const qTrain = await ch.assertQueue('training')
   app.post('/cgi/train', (req, res) => {
     const { body } = req
     if (!body.trainData) {
@@ -55,7 +47,7 @@ async function main() {
     }
 
     const content = JSON.stringify(body)
-    await ch.sendToQueue(qTrain.queue, Buffer.from(content))
+    // TODO
     res.status(200).send('{}')
   })
 

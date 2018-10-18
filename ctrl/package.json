@@ -1,17 +1,16 @@
 {
-  "name": "nn",
+  "name": "ctrl",
   "private": true,
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
+  "main": "ctrl.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "body-parser": "^1.18.3",
-    "express": "^4.16.4",
+    "redux": "^4.0.1",
     "zeromq": "^5.0.0"
   }
 }
