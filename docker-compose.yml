@@ -1,10 +1,5 @@
 version: '2'
 services:
-  broker:
-    image: rabbitmq:3-management
-    ports:
-      - 15672:15672
-
   ctrl:
     build: ./ctrl
     volumes:
@@ -15,7 +10,7 @@ services:
   trainer:
     build: ./trainer
     links:
-      - broker
+      - ctrl
     volumes:
       - ./trainer:/work
     working_dir: /work
@@ -24,7 +19,6 @@ services:
   app:
     build: ./app
     links:
-      - broker
       - ctrl
     volumes:
       - ./app:/work
