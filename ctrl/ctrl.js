@@ -11,16 +11,19 @@ replier.on('message', msg => {
   switch (msg.event) {
     case 'get_state':
       content = { ...content, response: store.getState() }
+      break
 
     case 'train': {
       const payload = { trainData: msg.trainData }
       const action = { type: 'TRAIN', payload }
       store.dispatch(action)
       content = { event: content.event }
+      break
     }
 
     case 'train_result': {
       console.log('new train_result', content)
+      break
     }
 
     default:
