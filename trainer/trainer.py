@@ -20,6 +20,7 @@ class Trainer(threading.Thread):
         self.trainData = trainData
         self.stopEvent = threading.Event()
         self.on_epoch_end = pymitter.EventEmitter()
+        keras.backend.clear_session()
 
     def run(self):
         logging.info('running thread')
