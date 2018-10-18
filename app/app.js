@@ -17,18 +17,21 @@ async function main() {
   const client = zmq.socket('req')
   client.connect('tcp://ctrl:3001')
   client.on('message', msg => {
-    emitter.emit('get_models', { content: msg })
+    msg = JSON.parse(msg.toString())
+    emitter.emit(msg.event, msg.response)
   })
 
   app.get('/cgi/models', async (req, res) => {
     try {
-      client.send('')
+      const event = 'get_state'
+      const content = { event }
+      client.send(JSON.stringify(content))
       // FIXME: correlation id!
-      emitter.once('get_models', msg =>
+      emitter.once(event, response =>
         res
           .header('Content-type', 'application/json')
           .status(200)
-          .send(msg.content),
+          .send(response),
       )
     } catch (err) {
       console.error(err)

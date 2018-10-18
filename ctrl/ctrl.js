@@ -6,8 +6,17 @@ const replier = zmq.socket('rep')
 const publisher = zmq.socket('sub')
 
 replier.on('message', msg => {
-  const state = store.getState()
-  replier.send(JSON.stringify(state))
+  msg = JSON.parse(msg.toString())
+  let content = { ...msg }
+  switch (msg.event) {
+    case 'get_state':
+      content = { ...content, response: store.getState() }
+      return replier.send(JSON.stringify(content))
+
+    default:
+      content = { ...content, error: 'nn: unknown event' }
+      return replier.send(JSON.stringify(content))
+  }
 })
 
 store.subscribe(state => {
