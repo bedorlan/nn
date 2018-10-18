@@ -5,6 +5,7 @@ import keras
 import numpy
 from sklearn.preprocessing import MinMaxScaler
 import logging
+import tester
 
 # reshape(samples, time_steps, features)
 
@@ -24,7 +25,7 @@ class Trainer(threading.Thread):
 
     def run(self):
         logging.info('running thread')
-        data = self.getData()
+        data, scalarY = self.getData()
         data_windows = create_windows(data, window_size)
         data_windows = numpy.array(
             data_windows).reshape(-1, window_size, features)
@@ -35,8 +36,9 @@ class Trainer(threading.Thread):
         while not self.stopEvent.is_set():
             history = model.fit(X, y, epochs=1000, verbose=0)
             model.save(MODEL_FILE)
-            print 'loss=', history
-            self.on_epoch_end.emit('train_result', [4, 5])
+            datanew = tester.predict(model, data, scalarY)
+            result = [data[:, 1].tolist(), datanew[:, 1].tolist()]
+            self.on_epoch_end.emit('train_result', result)
             # print 'loss=', history.history['loss'][-1]
 
     def stop(self):
