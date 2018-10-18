@@ -34,7 +34,7 @@ while True:
     if trainjob is None:
         trainjob = trainer.Trainer()
         trainjob.init(state['train'])
-        # trainjob.on_epoch_end.on_any(send_train_result)
+        trainjob.on_epoch_end.on_any(send_train_result)
         logging.info('start trainer')
         trainjob.start()
     else:

@@ -11,23 +11,23 @@ replier.on('message', msg => {
   switch (msg.event) {
     case 'get_state':
       content = { ...content, response: store.getState() }
-      return replier.send(JSON.stringify(content))
 
     case 'train': {
       const payload = { trainData: msg.trainData }
       const action = { type: 'TRAIN', payload }
       store.dispatch(action)
       content = { event: content.event }
-      return replier.send(JSON.stringify(content))
     }
 
     case 'train_result': {
-      return console.log('new train_result', content)
+      console.log('new train_result', content)
     }
+
     default:
       content = { ...content, error: 'nn: unknown event' }
-      return replier.send(JSON.stringify(content))
   }
+
+  replier.send(JSON.stringify(content))
 })
 
 store.subscribe(() => {
