@@ -33,10 +33,12 @@ class Trainer(threading.Thread):
         X = data_windows[:, :-1]
         y = data_windows[:, -1, 1]
         #board = keras.callbacks.TensorBoard(log_dir='./logs')
-        while not self.stopEvent.is_set():
+        while True:
             history = model.fit(X, y, epochs=1000, verbose=0)
             # model.save(MODEL_FILE)
             datanew = tester.predict(model, data, scalarY)
+            if self.stopEvent.is_set():
+                break
             result = [data[:, 1].tolist(), datanew[:, 1].tolist()]
             self.on_epoch_end.emit('train_result', result)
             # print 'loss=', history.history['loss'][-1]
