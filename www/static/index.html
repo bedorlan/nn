@@ -43,8 +43,8 @@ class MyComponent extends React.Component {
         const notReady = false 
             || this.state.busy 
             || this.state.activeTab === "csv"
-            || !this.state.trainData 
-            || this.state.trainData.length === 0
+            || this.state.activeTab === "manual" && (!this.state.trainData || this.state.trainData.length === 0)
+            || this.state.activeTab === "predict" && (!this.state.predictData || this.state.predictData.length === 0)
 
         return <>
             <Nav tabs={true}>
