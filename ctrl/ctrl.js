@@ -57,7 +57,8 @@ function reducer(prevState, action) {
     case 'TRAIN':
       return {
         ...prevState,
-        train: action.payload.trainData,
+        // temporalmente si se manda a entrenar 2 veces, paro el proceso anterior
+        train: !prevState.train ? action.payload.trainData : undefined,
       }
 
     case 'TRAIN_RESULT':

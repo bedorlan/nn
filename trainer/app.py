@@ -31,13 +31,14 @@ while True:
     logging.info('new message=' + msg)
     state = json.loads(msg)
 
-    if trainjob is None:
+    if trainjob is None and 'train' in state:
         trainjob = trainer.Trainer()
         trainjob.init(state['train'])
         trainjob.on_epoch_end.on_any(send_train_result)
         logging.info('start trainer')
         trainjob.start()
-    else:
+    elif trainjob is not None and "train" not in state:
+        # si el campo train esta vacio: me detengo
         logging.info('stop trainer')
         trainjob.stop()
         trainjob = None
