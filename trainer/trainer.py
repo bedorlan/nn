@@ -45,12 +45,16 @@ class Trainer(threading.Thread):
             end = timeit.default_timer()
             if self.stopEvent.is_set():
                 break
+
             per_epoch = (end - start) / epochs
             epochs = int(math.ceil(report_time / per_epoch))
-            result = [data[:, 1].tolist(), datanew[:, 1].tolist()]
+            trainResult = [data[:, 1].tolist(), datanew[:, 1].tolist()]
+            loss = history.history['loss'][-1]
+            result = {"trainResult": trainResult, "loss": loss}
+
             self.on_epoch_end.emit('train_result', result)
             logging.info('epochs=%d' % epochs)
-            logging.info('loss=%f' % history.history['loss'][-1])
+            logging.info('loss=%f' % loss)
 
     def stop(self):
         self.stopEvent.set()

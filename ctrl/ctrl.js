@@ -29,7 +29,10 @@ replier.on('message', msg => {
     }
 
     case 'train_result': {
-      const payload = { trainResult: msg.content }
+      const payload = {
+        trainResult: msg.content.trainResult,
+        loss: msg.content.loss,
+      }
       const action = { type: 'TRAIN_RESULT', payload }
       store.dispatch(action)
       break
@@ -61,8 +64,9 @@ function reducer(prevState, action) {
     case 'TRAIN':
       return {
         ...prevState,
-        trainResult: null,
         train: action.payload.trainData,
+        trainResult: null,
+        loss: null,
       }
 
     case 'TRAIN_STOP':
@@ -75,6 +79,7 @@ function reducer(prevState, action) {
       return {
         ...prevState,
         trainResult: action.payload.trainResult,
+        loss: action.payload.loss,
       }
 
     default:

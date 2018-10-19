@@ -13,7 +13,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dropzone/6.2.2/index.js"></script>
 
     <script type="text/babel">
-const { Input, Label, Button, Nav, NavItem, NavLink, TabContent, TabPane } = Reactstrap
+const { Alert, Input, Label, Button, Nav, NavItem, NavLink, TabContent, TabPane } = Reactstrap
 const { LineChart } = ReactChartkick
 
 class MyComponent extends React.Component {
@@ -43,6 +43,7 @@ class MyComponent extends React.Component {
                     data.trainResult[0].map((x, i) => [i, x]),
                     data.trainResult[1].map((x, i) => [i, x]),
                 ]
+                newState.loss = data.loss
             }
             this.setState(newState)
         })
@@ -83,6 +84,10 @@ class MyComponent extends React.Component {
             >{this.state.training ? "Stop" : "Start"}</Button>
             {' '}
             <img hidden={!this.state.training} src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Loading_2.gif" width="5%" />
+            {this.state.loss && 
+                <Alert color={getColorByLoss(this.state.loss)} className="float-right">
+                    Loss {this.state.loss * 100}%
+                </Alert>}
             {this.state.trainResult && <LineChart 
                 legend={false}
                 min={-1} max={1}
@@ -129,6 +134,7 @@ class MyComponent extends React.Component {
         this.setState({
             training: true,
             trainResult: null,
+            loss: null,
         })
 
         const trainData = this.state.trainData.split('\n').map(line => line.split(',').map(Number))
@@ -141,6 +147,18 @@ class MyComponent extends React.Component {
     async stop() {
         fetch('/cgi/stopTrain')
     }
+}
+
+function getColorByLoss(loss) {
+    if (loss >= 0.1) {
+        return "danger"
+    }
+
+    if (loss >= 0.01) {
+        return "warning"
+    }
+
+    return "success"
 }
 
 ReactDOM.render(
