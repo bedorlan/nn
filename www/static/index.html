@@ -158,13 +158,20 @@ class MyComponent extends React.Component {
     }
 
     async onSubmit() {
+        const prevState = {...this.state}
         this.newState({busy: true})
 
-        if (!this.state.running) {
-            await this.start()
+        try {
+            if (!this.state.running) {
+                await this.start()
 
-        } else {
-            await this.stop()         
+            } else {
+                await this.stop()         
+            }
+
+        } catch(err) {
+            console.error(err)
+            this.newState(prevState)
         }
     }
 
@@ -188,7 +195,7 @@ class MyComponent extends React.Component {
         const body = JSON.stringify({trainData})
         const headers = {'Content-type': 'application/json'}
 
-        await fetch('/cgi/train', {method: 'POST', headers, body})
+        await fetcher('/cgi/train', {method: 'POST', headers, body})
     }
 
     async predict() {
@@ -201,11 +208,11 @@ class MyComponent extends React.Component {
         const body = JSON.stringify({trainData})
         const headers = {'Content-type': 'application/json'}
 
-        await fetch('/cgi/predict', {method: 'POST', headers, body})
+        await fetcher('/cgi/predict', {method: 'POST', headers, body})
     }
 
     stop() {
-        fetch('/cgi/stopTrain')
+        fetcher('/cgi/stopTrain')
     }
 }
 
@@ -219,6 +226,14 @@ function getColorByLoss(loss) {
     }
 
     return "success"
+}
+
+async function fetcher(...args) {
+    const response = await fetch(...args)
+    if (!response.ok) {
+        throw await response.text()
+    }
+    return await response.text()
 }
 
 ReactDOM.render(
