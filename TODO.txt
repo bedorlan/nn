@@ -1,2 +1,3 @@
+- quitar leyendas del grafico
 - sanitizar los campos. resistir con datos invalidos
 - deshabilitar los demas tabs cuando esta entrenando
