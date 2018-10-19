@@ -204,8 +204,8 @@ class MyComponent extends React.Component {
             predictResult: null,
         })
 
-        const trainData = this.state.predictData.split('\n').map(line => line.split(',').map(Number))
-        const body = JSON.stringify({trainData})
+        const predictData = this.state.predictData.split('\n').map(line => line.split(',').map(Number))
+        const body = JSON.stringify({predictData})
         const headers = {'Content-type': 'application/json'}
 
         await fetcher('/cgi/predict', {method: 'POST', headers, body})
