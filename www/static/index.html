@@ -40,7 +40,7 @@ class MyComponent extends React.Component {
     }
 
     render() {
-        const disableCommands = false 
+        const notReady = false 
             || this.state.busy 
             || this.state.activeTab === "csv"
             || !this.state.trainData 
@@ -86,9 +86,9 @@ class MyComponent extends React.Component {
                 </TabPane>
             </TabContent>
             <br />
-            <Button color={disableCommands ? "secondary" : "primary"}
+            <Button color={notReady ? "secondary" : "primary"}
                 onClick={this.onSubmit}
-                disabled={disableCommands} 
+                disabled={notReady} 
             >{this.state.running ? "Stop" : "Start"}</Button>
             {' '}
             <img hidden={!this.state.busy && !this.state.running} src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Loading_2.gif" width="5%" />
