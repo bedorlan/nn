@@ -2,6 +2,8 @@ version: '2'
 services:
   ctrl:
     build: ./ctrl
+    networks:
+      - default
     volumes:
       - ./ctrl:/work
     working_dir: /work
@@ -9,8 +11,8 @@ services:
 
   trainer:
     build: ./trainer
-    links:
-      - ctrl
+    networks:
+      - default
     volumes:
       - ./trainer:/work
     working_dir: /work
@@ -18,8 +20,8 @@ services:
 
   app:
     build: ./app
-    links:
-      - ctrl
+    networks:
+      - default
     volumes:
       - ./app:/work
     working_dir: /work
@@ -30,8 +32,8 @@ services:
     image: nginx
     ports:
       - 80:80
-    links:
-      - app
+    networks:
+      - default
     volumes:
       - ./www:/work
       - ./www/nginx.conf:/etc/nginx/nginx.conf
