@@ -39,4 +39,5 @@ while True:
         # si el campo train esta vacio: me detengo
         logging.info('stop trainer')
         trainjob.stop()
+        trainjob.join()
         trainjob = None
