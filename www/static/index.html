@@ -19,8 +19,10 @@ const { LineChart } = ReactChartkick
 class MyComponent extends React.Component {
     constructor(props) {
         super(props)
-        this.onSubmit = this.onSubmit.bind(this)
         this.state = {activeTab: "csv"}
+
+        this.onSubmit = this.onSubmit.bind(this)
+        this.onDrop = this.onDrop.bind(this)
     }
 
     componentWillMount() {
@@ -48,7 +50,10 @@ class MyComponent extends React.Component {
             </Nav>
             <TabContent activeTab={this.state.activeTab}>
                 <TabPane tabId="csv">
-                    <Dropzone accept=".csv">
+                    <Dropzone 
+                        accept=".csv" 
+                        onDrop={this.onDrop}
+                        multiple={false} >
                         Drop csv file here<br />
                         or click to select a file
                     </Dropzone>
@@ -59,15 +64,36 @@ class MyComponent extends React.Component {
                         rows={10} 
                         onChange={e => this.setState({trainData: e.target.value})} 
                         placeholder="Paste the data here"
+                        value={this.state.trainData}
                     />
                 </TabPane>
             </TabContent>
             <br />
-            <Button onClick={this.onSubmit} disabled={!this.state.dataReady}>Start</Button>
+            <Button onClick={this.onSubmit} disabled={!this.state.trainData || this.state.trainData.length === 0}>Start</Button>
             {this.state.trainResult &&
                 <LineChart legend={false} min={-1} max={1} data={[{data: this.state.trainResult[0]}, {data: this.state.trainResult[1]}]}  />
             }
         </>
+    }
+
+    onDrop(accepted, rejected) {
+        if (accepted.length !== 1) {
+            return
+        }
+
+        const file = accepted[0]
+        const reader = new FileReader()
+        reader.onload = () => this.processFileContent(reader.result)
+        reader.readAsBinaryString(file)
+    }
+
+    processFileContent(fileContent) {
+        fileContent = fileContent.substring(fileContent.indexOf('\n') + 1) 
+
+        this.setState({
+            trainData: fileContent,
+            activeTab: "manual",
+        })
     }
 
     async onSubmit() {
