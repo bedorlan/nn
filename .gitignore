@@ -1,4 +1,5 @@
 *.pyc
 logs/
+trainer/models/
 node_modules/
 .vscode/.ropeproject/
