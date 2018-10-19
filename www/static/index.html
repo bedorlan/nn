@@ -24,29 +24,9 @@ class MyComponent extends React.Component {
             busy: true,
         }
 
+        this.onNewState = this.onNewState.bind(this)
         this.onSubmit = this.onSubmit.bind(this)
-        this.onDrop = this.onDrop.bind(this)
-    }
-
-    componentWillMount() {
-        const watchEvent = new EventSource('/cgi/watch');
-        watchEvent.addEventListener('message', (e) => {
-            const data = JSON.parse(e.data)
-            const newState = {busy: false}
-            newState.training = !!data.train
-            if (newState.training) {
-                newState.trainData = data.train.map(row => row.join(',')).join('\n')
-                newState.activeTab = "manual"
-            }
-            if (data.trainResult) {
-                newState.trainResult = [
-                    data.trainResult[0].map((x, i) => [i, x]),
-                    data.trainResult[1].map((x, i) => [i, x]),
-                ]
-                newState.loss = data.loss
-            }
-            this.setState(newState)
-        })
+        this.onDropNewFile = this.onDropNewFile.bind(this)
     }
 
     render() {
@@ -62,7 +42,7 @@ class MyComponent extends React.Component {
                 <TabPane tabId="csv">
                     <Dropzone
                         accept=".csv" 
-                        onDrop={this.onDrop}
+                        onDrop={this.onDropNewFile}
                         multiple={false} >
                         Drop csv file here<br />
                         or click to select a file
@@ -100,7 +80,30 @@ class MyComponent extends React.Component {
         </>
     }
 
-    onDrop(accepted, rejected) {
+    componentWillMount() {
+        const watchEvent = new EventSource('/cgi/watch');
+        watchEvent.addEventListener('message', this.onNewState)
+    }
+
+    onNewState(e) {
+        const data = JSON.parse(e.data)
+        const newState = {busy: false}
+        newState.training = !!data.train
+        if (newState.training) {
+            newState.trainData = data.train.map(row => row.join(',')).join('\n')
+            newState.activeTab = "manual"
+        }
+        if (data.trainResult) {
+            newState.trainResult = [
+                data.trainResult[0].map((x, i) => [i, x]),
+                data.trainResult[1].map((x, i) => [i, x]),
+            ]
+            newState.loss = data.loss
+        }
+        this.setState(newState)
+    }
+
+    onDropNewFile(accepted, rejected) {
         if (accepted.length !== 1) {
             return
         }
