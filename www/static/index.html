@@ -50,11 +50,18 @@ class MyComponent extends React.Component {
             <Nav tabs={true}>
                 { // FIXME: disabled={this.state.training}
                 }
-                <NavItem><NavLink active={this.state.activeTab === "csv"} onClick={() => this.newState({activeTab: "csv"})} href="#">
+                <NavItem><NavLink href="#"
+                    active={this.state.activeTab === "csv"} 
+                    onClick={() => this.newState({activeTab: "csv"})} >
                     Upload CSV</NavLink></NavItem>
-                <NavItem><NavLink active={this.state.activeTab === "manual"} onClick={() => this.newState({activeTab: "manual"})} href="#">
+                <NavItem><NavLink href="#"
+                    active={this.state.activeTab === "manual"}
+                    onClick={() => this.newState({activeTab: "manual"})} >
                     Train</NavLink></NavItem>
-                <NavItem><NavLink active={this.state.activeTab === "predict"} onClick={() => this.newState({activeTab: "predict"})} href="#">
+                <NavItem><NavLink href="#"
+                    active={this.state.activeTab === "predict"}
+                    disabled={!this.state.trainResult}
+                    onClick={() => this.newState({activeTab: "predict"})} >
                     Predict</NavLink></NavItem>
             </Nav>
             <TabContent activeTab={this.state.activeTab}>
