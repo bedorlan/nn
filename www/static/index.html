@@ -50,6 +50,7 @@ class MyComponent extends React.Component {
     }
 
     render() {
+        const disableCommands = this.state.busy || !this.state.trainData || this.state.trainData.length === 0
         return <>
             <Nav tabs={true}>
                 <NavItem><NavLink disabled={this.state.training} active={this.state.activeTab === "csv"} onClick={() => this.setState({activeTab: "csv"})} href="#">
@@ -78,12 +79,12 @@ class MyComponent extends React.Component {
                 </TabPane>
             </TabContent>
             <br />
-            <Button
+            <Button color={disableCommands ? "secondary" : "primary"}
                 onClick={this.onSubmit}
-                disabled={this.state.busy || !this.state.trainData || this.state.trainData.length === 0} 
+                disabled={disableCommands} 
             >{this.state.training ? "Stop" : "Start"}</Button>
             {' '}
-            <img hidden={!this.state.training} src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Loading_2.gif" width="5%" />
+            <img hidden={!this.state.busy && !this.state.training} src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Loading_2.gif" width="5%" />
             {this.state.loss && 
                 <Alert color={getColorByLoss(this.state.loss)} className="float-right">
                     Loss {this.state.loss * 100}%
