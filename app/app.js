@@ -32,13 +32,11 @@ async function main() {
         Connection: 'keep-alive',
       })
 
-      const notifyFn = () => res.write(`data: ${prevState}\n\n`)
+      const notifyFn = () => res.write(`data: ${prevState || '{}'}\n\n`)
       emitter.on(newStateEvent, notifyFn)
       req.on('close', () => emitter.removeListener(newStateEvent, notifyFn))
 
-      if (prevState) {
         notifyFn()
-      }
     } catch (err) {
       console.error(err)
       res.sendStatus(500)
