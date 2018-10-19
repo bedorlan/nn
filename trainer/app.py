@@ -26,16 +26,14 @@ def send_train_result(result):
 
 trainjob = None
 while True:
-    logging.info('waiting for message')
     msg = subscriber.recv_string()
-    logging.info('new message=' + msg)
     state = json.loads(msg)
 
     if trainjob is None and 'train' in state:
         trainjob = trainer.Trainer()
         trainjob.init(state['train'])
         trainjob.on_epoch_end.on_any(send_train_result)
-        logging.info('start trainer')
+        logging.info('start trainer msg=' + msg)
         trainjob.start()
     elif trainjob is not None and "train" not in state:
         # si el campo train esta vacio: me detengo

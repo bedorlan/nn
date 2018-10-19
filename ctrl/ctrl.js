@@ -44,7 +44,6 @@ replier.on('message', msg => {
 
 store.subscribe(() => {
   const state = store.getState()
-  console.log('new_state', state)
   publisher.send(JSON.stringify(state))
 })
 
@@ -52,8 +51,6 @@ replier.bind('tcp://*:3001', err => err && console.error(err))
 publisher.bind('tcp://*:3002', err => err && console.error(err))
 
 function reducer(prevState, action) {
-  console.log('reducer', prevState, action)
-
   if (prevState == null) {
     return {
       models: ['a', 'b'],

@@ -21,7 +21,6 @@ async function main() {
   subscriber.subscribe('')
   subscriber.on('message', msg => {
     prevState = msg = msg.toString()
-    console.log('new subscriber message', msg)
     emitter.emit(newStateEvent, msg)
   })
 
