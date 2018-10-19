@@ -53,8 +53,7 @@ class Trainer(threading.Thread):
             result = {"trainResult": trainResult, "loss": loss}
 
             self.on_epoch_end.emit('train_result', result)
-            logging.info('epochs=%d' % epochs)
-            logging.info('loss=%f' % loss)
+            logging.info('epochs=%d, loss=%f' % (epochs, loss))
 
     def stop(self):
         self.stopEvent.set()
