@@ -44,7 +44,7 @@ class MyComponent extends React.Component {
             || this.state.busy 
             || this.state.activeTab === "csv"
             || this.state.activeTab === "manual" && (!this.state.trainData || this.state.trainData.length === 0)
-            || this.state.activeTab === "predict" && (!this.state.predictData || this.state.predictData.length === 0)
+            || this.state.activeTab === "predict" && (!this.state.predictData || this.state.predictData.length === 0 || this.state.predicting)
 
         return <>
             <Nav tabs={true}>
@@ -121,12 +121,16 @@ class MyComponent extends React.Component {
 
     onNewState(e) {
         const data = JSON.parse(e.data)
+        console.log('newState', data)
+
         const newState = {busy: false}
         newState.training = !!data.train
+
         if (newState.training) {
             newState.trainData = data.train.map(row => row.join(',')).join('\n')
             newState.activeTab = "manual"
         }
+
         if (data.trainResult) {
             newState.trainResult = [
                 data.trainResult[0].map((x, i) => [i, x]),
@@ -134,6 +138,12 @@ class MyComponent extends React.Component {
             ]
             newState.loss = data.loss
         }
+
+        if (data.predictResult) {
+            newState.predictData = data.predictResult.map(row => row.join(',')).join('\n')
+            newState.predicting = false
+        }
+
         this.newState(newState)
     }
 

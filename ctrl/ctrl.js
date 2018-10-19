@@ -38,6 +38,21 @@ replier.on('message', msg => {
       break
     }
 
+    case 'predict': {
+      const payload = { predictData: msg.predictData }
+      const action = { type: 'PREDICT', payload }
+      store.dispatch(action)
+      response = { event: response.event }
+      break
+    }
+
+    case 'predict_result': {
+      const payload = { predictResult: msg.content.predictResult }
+      const action = { type: 'PREDICT_RESULT', payload }
+      store.dispatch(action)
+      break
+    }
+
     default:
       response = { ...response, error: 'nn: unknown event' }
   }
@@ -67,6 +82,8 @@ function reducer(prevState, action) {
         train: action.payload.trainData,
         trainResult: null,
         loss: null,
+        predict: undefined,
+        predictResult: undefined,
       }
 
     case 'TRAIN_STOP':
@@ -80,6 +97,20 @@ function reducer(prevState, action) {
         ...prevState,
         trainResult: action.payload.trainResult,
         loss: action.payload.loss,
+      }
+
+    case 'PREDICT':
+      return {
+        ...prevState,
+        predict: action.payload.predictData,
+        predictResult: undefined,
+      }
+
+    case 'PREDICT_RESULT':
+      return {
+        ...prevState,
+        predict: undefined,
+        predictResult: action.payload.predictResult,
       }
 
     default:

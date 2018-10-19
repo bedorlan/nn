@@ -11,7 +11,7 @@ predictions_quantity = 6
 time_steps = window_size - 1
 
 
-def single_predict(model, y, scalarY, i):
+def single_predict(model, y, scalarY, i=0):
     ynew = y.copy()
     X = ynew[i:][:time_steps]
     X = X.reshape(-1, time_steps, features)

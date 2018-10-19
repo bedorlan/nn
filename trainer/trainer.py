@@ -5,6 +5,7 @@ import math
 import pymitter
 import keras
 import numpy
+import sklearn
 from sklearn.preprocessing import MinMaxScaler
 import logging
 import tester
@@ -13,9 +14,11 @@ import tester
 
 window_size = 6
 features = 2
+time_steps = window_size - 1
 report_time = 10
 
 MODEL_FILE = 'models/out.model'
+SCALARY_FILE = 'models/out.scalar_y'
 
 
 class Trainer(threading.Thread):
@@ -28,11 +31,13 @@ class Trainer(threading.Thread):
 
     def run(self):
         logging.info('running thread')
-        data, scalarY = self.getData()
+        data, scalarY = prepareData(self.trainData)
+        sklearn.externals.joblib.dump(scalarY, SCALARY_FILE)
+
         data_windows = create_windows(data, window_size)
         data_windows = numpy.array(
             data_windows).reshape(-1, window_size, features)
-        model = getModel()
+        model = createModel()
         X = data_windows[:, :-1]
         y = data_windows[:, -1, 1]
         #board = keras.callbacks.TensorBoard(log_dir='./logs')
@@ -40,7 +45,7 @@ class Trainer(threading.Thread):
         while True:
             start = timeit.default_timer()
             history = model.fit(X, y, epochs=epochs, verbose=0)
-            # model.save(MODEL_FILE)
+            model.save(MODEL_FILE)
             datanew = tester.predict(model, data, scalarY)
             end = timeit.default_timer()
             if self.stopEvent.is_set():
@@ -58,12 +63,33 @@ class Trainer(threading.Thread):
     def stop(self):
         self.stopEvent.set()
 
-    def getData(self):
-        y = numpy.array(self.trainData)
+
+def prepareData(data, scalarY=None):
+    y = numpy.array(data)
+    if scalarY is None:
         scalarY = MinMaxScaler(feature_range=(-1, 1))
         scalarY.fit(y)
-        y = scalarY.transform(y)
-        return y, scalarY
+
+    y = scalarY.transform(y)
+    return y, scalarY
+
+
+def predict(y):
+    keras.backend.clear_session()
+    # assert 5 = len(y)
+    y += [[0.0, 0.0]]
+    scalarY = sklearn.externals.joblib.load(SCALARY_FILE)
+    y, scalarY = prepareData(y)
+    logging.info(y)
+
+    model = getModel()
+    ynew = tester.single_predict(model, y, scalarY)
+
+    logging.info('prediction!')
+    logging.info(ynew)
+
+    ynew = scalarY.inverse_transform(ynew).tolist()
+    return {"predictResult": ynew}
 
 
 def createModel():

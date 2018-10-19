@@ -36,7 +36,7 @@ async function main() {
       emitter.on(newStateEvent, notifyFn)
       req.on('close', () => emitter.removeListener(newStateEvent, notifyFn))
 
-        notifyFn()
+      notifyFn()
     } catch (err) {
       console.error(err)
       res.sendStatus(500)
@@ -95,6 +95,27 @@ async function main() {
       const event = 'train'
       const { trainData } = body
       const content = { event, trainData }
+      client.send(JSON.stringify(content))
+
+      emitter.once(event, () => res.sendStatus(202))
+    } catch (err) {
+      console.error(err)
+      res.sendStatus(500)
+    }
+  })
+
+  app.post('/cgi/predict', (req, res) => {
+    try {
+      const { body } = req
+      console.log('/cgi/predict', body)
+      if (!body.predictData) {
+        console.error(400, body)
+        return res.sendStatus(400)
+      }
+
+      const event = 'predict'
+      const { predictData } = body
+      const content = { event, predictData }
       client.send(JSON.stringify(content))
 
       emitter.once(event, () => res.sendStatus(202))
