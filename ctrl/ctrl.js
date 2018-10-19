@@ -21,6 +21,13 @@ replier.on('message', msg => {
       break
     }
 
+    case 'stopTrain': {
+      const action = { type: 'TRAIN_STOP' }
+      store.dispatch(action)
+      response = { event: response.event }
+      break
+    }
+
     case 'train_result': {
       const payload = { trainResult: msg.content }
       const action = { type: 'TRAIN_RESULT', payload }
@@ -57,8 +64,14 @@ function reducer(prevState, action) {
     case 'TRAIN':
       return {
         ...prevState,
-        // temporalmente si se manda a entrenar 2 veces, paro el proceso anterior
-        train: !prevState.train ? action.payload.trainData : undefined,
+        trainResult: null,
+        train: action.payload.trainData,
+      }
+
+    case 'TRAIN_STOP':
+      return {
+        ...prevState,
+        train: undefined,
       }
 
     case 'TRAIN_RESULT':

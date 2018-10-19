@@ -19,7 +19,10 @@ const { LineChart } = ReactChartkick
 class MyComponent extends React.Component {
     constructor(props) {
         super(props)
-        this.state = {activeTab: "csv"}
+        this.state = {
+            activeTab: "csv",
+            busy: true,
+        }
 
         this.onSubmit = this.onSubmit.bind(this)
         this.onDrop = this.onDrop.bind(this)
@@ -29,28 +32,33 @@ class MyComponent extends React.Component {
         const watchEvent = new EventSource('/cgi/watch');
         watchEvent.addEventListener('message', (e) => {
             const data = JSON.parse(e.data)
-            if (!data.trainResult) {
-                return
+            const newState = {busy: false}
+            newState.training = !!data.train
+            if (newState.training) {
+                newState.trainData = data.train.map(row => row.join(',')).join('\n')
+                newState.activeTab = "manual"
             }
-            const trainResult = [
-                data.trainResult[0].map((x, i) => [i, x]),
-                data.trainResult[1].map((x, i) => [i, x]),
-            ]
-            this.setState({trainResult})
+            if (data.trainResult) {
+                newState.trainResult = [
+                    data.trainResult[0].map((x, i) => [i, x]),
+                    data.trainResult[1].map((x, i) => [i, x]),
+                ]
+            }
+            this.setState(newState)
         })
     }
 
     render() {
         return <>
             <Nav tabs={true}>
-                <NavItem><NavLink active={this.state.activeTab === "csv"} onClick={() => this.setState({activeTab: "csv"})} href="#">
+                <NavItem><NavLink disabled={this.state.training} active={this.state.activeTab === "csv"} onClick={() => this.setState({activeTab: "csv"})} href="#">
                     Upload CSV</NavLink></NavItem>
                 <NavItem><NavLink active={this.state.activeTab === "manual"} onClick={() => this.setState({activeTab: "manual"})} href="#">
                     Manual paste data</NavLink></NavItem>
             </Nav>
             <TabContent activeTab={this.state.activeTab}>
                 <TabPane tabId="csv">
-                    <Dropzone 
+                    <Dropzone
                         accept=".csv" 
                         onDrop={this.onDrop}
                         multiple={false} >
@@ -59,8 +67,8 @@ class MyComponent extends React.Component {
                     </Dropzone>
                 </TabPane>
                 <TabPane tabId="manual">
-                    <Input type="textarea" 
-                        id="trainData" 
+                    <Input type="textarea"
+                        disabled={this.state.training}
                         rows={10} 
                         onChange={e => this.setState({trainData: e.target.value})} 
                         placeholder="Paste the data here"
@@ -69,10 +77,20 @@ class MyComponent extends React.Component {
                 </TabPane>
             </TabContent>
             <br />
-            <Button onClick={this.onSubmit} disabled={!this.state.trainData || this.state.trainData.length === 0}>Start</Button>
-            {this.state.trainResult &&
-                <LineChart legend={false} min={-1} max={1} data={[{data: this.state.trainResult[0]}, {data: this.state.trainResult[1]}]}  />
-            }
+            <Button
+                onClick={this.onSubmit}
+                disabled={this.state.busy || !this.state.trainData || this.state.trainData.length === 0} 
+            >{this.state.training ? "Stop" : "Start"}</Button>
+            {' '}
+            <img hidden={!this.state.training} src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Loading_2.gif" width="5%" />
+            {this.state.trainResult && <LineChart 
+                legend={false}
+                min={-1} max={1}
+                data={[
+                    {data: this.state.trainResult[0]},
+                    {data: this.state.trainResult[1]},
+                ]}
+            />}
         </>
     }
 
@@ -97,10 +115,31 @@ class MyComponent extends React.Component {
     }
 
     async onSubmit() {
+        this.setState({busy: true})
+
+        if (!this.state.training) {
+            await this.start()
+
+        } else {
+            await this.stop()         
+        }
+    }
+
+    async start() {
+        this.setState({
+            training: true,
+            trainResult: null,
+        })
+
         const trainData = this.state.trainData.split('\n').map(line => line.split(',').map(Number))
         const body = JSON.stringify({trainData})
         const headers = {'Content-type': 'application/json'}
+
         await fetch('/cgi/train', {method: 'POST', headers, body})
+    }
+
+    async stop() {
+        fetch('/cgi/stopTrain')
     }
 }
 

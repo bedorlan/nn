@@ -15,14 +15,16 @@ async function main() {
   const emitter = new EventEmitter()
 
   const newStateEvent = 'new_state'
+  let prevState = '{}'
   const subscriber = zmq.socket('sub')
   subscriber.connect('tcp://ctrl:3002')
   subscriber.subscribe('')
   subscriber.on('message', msg => {
-    msg = msg.toString()
+    prevState = msg = msg.toString()
     console.log('new subscriber message', msg)
     emitter.emit(newStateEvent, msg)
   })
+
   app.get('/cgi/watch', async (req, res) => {
     try {
       res.writeHead(200, {
@@ -31,9 +33,13 @@ async function main() {
         Connection: 'keep-alive',
       })
 
-      const notifyFn = msg => res.write(`data: ${msg}\n\n`)
+      const notifyFn = () => res.write(`data: ${prevState}\n\n`)
       emitter.on(newStateEvent, notifyFn)
       req.on('close', () => emitter.removeListener(newStateEvent, notifyFn))
+
+      if (prevState) {
+        notifyFn()
+      }
     } catch (err) {
       console.error(err)
       res.sendStatus(500)
@@ -58,6 +64,20 @@ async function main() {
           .status(200)
           .send(response),
       )
+    } catch (err) {
+      console.error(err)
+      res.sendStatus(500)
+    }
+  })
+
+  app.get('/cgi/stopTrain', (req, res) => {
+    try {
+      console.log('/cgi/stopTrain')
+      const event = 'stopTrain'
+      const content = { event }
+      client.send(JSON.stringify(content))
+
+      emitter.once(event, () => res.sendStatus(202))
     } catch (err) {
       console.error(err)
       res.sendStatus(500)
