@@ -22,21 +22,40 @@ class MyComponent extends React.Component {
         this.state = {
             activeTab: "csv",
             busy: true,
+            training: null,
+            predicting: null,
+            trainData: null,
+            trainResult: null,
+            loss: null,
+            predictData: null,
+            predictResult: null,
         }
 
+        this.newState({})
+
+        this.newState = this.newState.bind(this)
         this.onNewState = this.onNewState.bind(this)
         this.onSubmit = this.onSubmit.bind(this)
         this.onDropNewFile = this.onDropNewFile.bind(this)
     }
 
     render() {
-        const disableCommands = this.state.busy || !this.state.trainData || this.state.trainData.length === 0
+        const disableCommands = false 
+            || this.state.busy 
+            || this.state.activeTab === "csv"
+            || !this.state.trainData 
+            || this.state.trainData.length === 0
+
         return <>
             <Nav tabs={true}>
-                <NavItem><NavLink disabled={this.state.training} active={this.state.activeTab === "csv"} onClick={() => this.setState({activeTab: "csv"})} href="#">
+                { // FIXME: disabled={this.state.training}
+                }
+                <NavItem><NavLink active={this.state.activeTab === "csv"} onClick={() => this.newState({activeTab: "csv"})} href="#">
                     Upload CSV</NavLink></NavItem>
-                <NavItem><NavLink active={this.state.activeTab === "manual"} onClick={() => this.setState({activeTab: "manual"})} href="#">
-                    Manual paste data</NavLink></NavItem>
+                <NavItem><NavLink active={this.state.activeTab === "manual"} onClick={() => this.newState({activeTab: "manual"})} href="#">
+                    Train</NavLink></NavItem>
+                <NavItem><NavLink active={this.state.activeTab === "predict"} onClick={() => this.newState({activeTab: "predict"})} href="#">
+                    Predict</NavLink></NavItem>
             </Nav>
             <TabContent activeTab={this.state.activeTab}>
                 <TabPane tabId="csv">
@@ -50,11 +69,19 @@ class MyComponent extends React.Component {
                 </TabPane>
                 <TabPane tabId="manual">
                     <Input type="textarea"
-                        disabled={this.state.training}
+                        disabled={this.state.running}
                         rows={10} 
-                        onChange={e => this.setState({trainData: e.target.value})} 
-                        placeholder="Paste the data here"
+                        onChange={e => this.newState({trainData: e.target.value})} 
+                        placeholder="Paste the train data here"
                         value={this.state.trainData}
+                    />
+                </TabPane>
+                <TabPane tabId="predict">
+                    <Input type="textarea"
+                        rows={10} 
+                        onChange={e => this.newState({predictData: e.target.value})} 
+                        placeholder="Paste the predict data here"
+                        value={this.state.predictData}
                     />
                 </TabPane>
             </TabContent>
@@ -62,9 +89,9 @@ class MyComponent extends React.Component {
             <Button color={disableCommands ? "secondary" : "primary"}
                 onClick={this.onSubmit}
                 disabled={disableCommands} 
-            >{this.state.training ? "Stop" : "Start"}</Button>
+            >{this.state.running ? "Stop" : "Start"}</Button>
             {' '}
-            <img hidden={!this.state.busy && !this.state.training} src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Loading_2.gif" width="5%" />
+            <img hidden={!this.state.busy && !this.state.running} src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Loading_2.gif" width="5%" />
             {this.state.loss && 
                 <Alert color={getColorByLoss(this.state.loss)} className="float-right">
                     Loss {this.state.loss * 100}%
@@ -78,6 +105,13 @@ class MyComponent extends React.Component {
                 ]}
             />}
         </>
+    }
+
+    newState(newState) {
+        super.setState(newState)
+        super.setState({
+            running: this.state.training || this.state.predicting,
+        })
     }
 
     componentWillMount() {
@@ -100,7 +134,7 @@ class MyComponent extends React.Component {
             ]
             newState.loss = data.loss
         }
-        this.setState(newState)
+        this.newState(newState)
     }
 
     onDropNewFile(accepted, rejected) {
@@ -117,16 +151,16 @@ class MyComponent extends React.Component {
     processFileContent(fileContent) {
         fileContent = fileContent.substring(fileContent.indexOf('\n') + 1) 
 
-        this.setState({
+        this.newState({
             trainData: fileContent,
             activeTab: "manual",
         })
     }
 
     async onSubmit() {
-        this.setState({busy: true})
+        this.newState({busy: true})
 
-        if (!this.state.training) {
+        if (!this.state.running) {
             await this.start()
 
         } else {
@@ -135,7 +169,16 @@ class MyComponent extends React.Component {
     }
 
     async start() {
-        this.setState({
+        const operation = this.state.activeTab === "manual" ? "train" : "predict"
+        if (operation === "train") {
+            await this.train()
+        } else {
+            await this.predict()
+        }
+    }
+
+    async train() {
+        this.newState({
             training: true,
             trainResult: null,
             loss: null,
@@ -148,7 +191,20 @@ class MyComponent extends React.Component {
         await fetch('/cgi/train', {method: 'POST', headers, body})
     }
 
-    async stop() {
+    async predict() {
+        this.newState({
+            predicting: true,
+            predictResult: null,
+        })
+
+        const trainData = this.state.predictData.split('\n').map(line => line.split(',').map(Number))
+        const body = JSON.stringify({trainData})
+        const headers = {'Content-type': 'application/json'}
+
+        await fetch('/cgi/predict', {method: 'POST', headers, body})
+    }
+
+    stop() {
         fetch('/cgi/stopTrain')
     }
 }
