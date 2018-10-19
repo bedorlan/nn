@@ -25,6 +25,9 @@ class MyComponent extends React.Component {
         const watchEvent = new EventSource('/cgi/watch');
         watchEvent.addEventListener('message', (e) => {
             const data = JSON.parse(e.data)
+            if (!data.trainResult) {
+                return
+            }
             const trainResult = [
                 data.trainResult[0].map((x, i) => [i, x]),
                 data.trainResult[1].map((x, i) => [i, x]),
@@ -39,7 +42,7 @@ class MyComponent extends React.Component {
             <Input type="textarea" id="trainData" rows={10} onChange={e => this.setState({trainData: e.target.value})} />
             <Button onClick={this.onSubmit}>Submit</Button>
             {this.state.trainResult &&
-                <LineChart legend={false} data={[{data: this.state.trainResult[0]}, {data: this.state.trainResult[1]}]}  />
+                <LineChart legend={false} min={-1} max={1} data={[{data: this.state.trainResult[0]}, {data: this.state.trainResult[1]}]}  />
             }
         </>
     }
