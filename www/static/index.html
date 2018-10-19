@@ -9,16 +9,18 @@
 
     <script src="https://unpkg.com/chart.js@2.7.2/dist/Chart.bundle.js"></script>
     <script src="https://unpkg.com/react-chartkick@0.3.0"></script>
+    <script src="https://unpkg.com/prop-types@15/prop-types.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dropzone/6.2.2/index.js"></script>
 
     <script type="text/babel">
-const { Input, Label, Button } = Reactstrap
+const { Input, Label, Button, Nav, NavItem, NavLink, TabContent, TabPane } = Reactstrap
 const { LineChart } = ReactChartkick
 
 class MyComponent extends React.Component {
     constructor(props) {
         super(props)
         this.onSubmit = this.onSubmit.bind(this)
-        this.state = {}
+        this.state = {activeTab: "csv"}
     }
 
     componentWillMount() {
@@ -38,9 +40,30 @@ class MyComponent extends React.Component {
 
     render() {
         return <>
-            <Label for="trainData">Train data</Label>
-            <Input type="textarea" id="trainData" rows={10} onChange={e => this.setState({trainData: e.target.value})} />
-            <Button onClick={this.onSubmit}>Submit</Button>
+            <Nav tabs={true}>
+                <NavItem><NavLink active={this.state.activeTab === "csv"} onClick={() => this.setState({activeTab: "csv"})} href="#">
+                    Upload CSV</NavLink></NavItem>
+                <NavItem><NavLink active={this.state.activeTab === "manual"} onClick={() => this.setState({activeTab: "manual"})} href="#">
+                    Manual paste data</NavLink></NavItem>
+            </Nav>
+            <TabContent activeTab={this.state.activeTab}>
+                <TabPane tabId="csv">
+                    <Dropzone accept=".csv">
+                        Drop csv file here<br />
+                        or click to select a file
+                    </Dropzone>
+                </TabPane>
+                <TabPane tabId="manual">
+                    <Input type="textarea" 
+                        id="trainData" 
+                        rows={10} 
+                        onChange={e => this.setState({trainData: e.target.value})} 
+                        placeholder="Paste the data here"
+                    />
+                </TabPane>
+            </TabContent>
+            <br />
+            <Button onClick={this.onSubmit} disabled={!this.state.dataReady}>Start</Button>
             {this.state.trainResult &&
                 <LineChart legend={false} min={-1} max={1} data={[{data: this.state.trainResult[0]}, {data: this.state.trainResult[1]}]}  />
             }
