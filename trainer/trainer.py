@@ -1,5 +1,7 @@
 import os
 import threading
+import timeit
+import math
 import pymitter
 import keras
 import numpy
@@ -11,6 +13,7 @@ import tester
 
 window_size = 6
 features = 2
+report_time = 10
 
 MODEL_FILE = 'models/out.model'
 
@@ -33,15 +36,21 @@ class Trainer(threading.Thread):
         X = data_windows[:, :-1]
         y = data_windows[:, -1, 1]
         #board = keras.callbacks.TensorBoard(log_dir='./logs')
+        epochs = 2
         while True:
-            history = model.fit(X, y, epochs=1000, verbose=0)
+            start = timeit.default_timer()
+            history = model.fit(X, y, epochs=epochs, verbose=0)
             # model.save(MODEL_FILE)
             datanew = tester.predict(model, data, scalarY)
+            end = timeit.default_timer()
             if self.stopEvent.is_set():
                 break
+            per_epoch = (end - start) / epochs
+            epochs = int(math.ceil(report_time / per_epoch))
             result = [data[:, 1].tolist(), datanew[:, 1].tolist()]
             self.on_epoch_end.emit('train_result', result)
-            # print 'loss=', history.history['loss'][-1]
+            logging.info('epochs=%d' % epochs)
+            logging.info('loss=%f' % history.history['loss'][-1])
 
     def stop(self):
         self.stopEvent.set()
