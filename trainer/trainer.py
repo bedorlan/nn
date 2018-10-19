@@ -76,14 +76,15 @@ def prepareData(data, scalarY=None):
 
 def predict(y):
     keras.backend.clear_session()
-    # assert 5 = len(y)
+    # assert 5 = len(y) ??
     y += [[0.0, 0.0]]
+    i = len(y) - time_steps - 1
     scalarY = sklearn.externals.joblib.load(SCALARY_FILE)
     y, scalarY = prepareData(y)
     logging.info(y)
 
     model = getModel()
-    ynew = tester.single_predict(model, y, scalarY)
+    ynew = tester.single_predict(model, y, scalarY, i)
 
     logging.info('prediction!')
     logging.info(ynew)
